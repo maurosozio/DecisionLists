@@ -1,0 +1,1066 @@
+# Hardness of Approximating Realizable Conjunction Decision Lists
+
+*Draft • November 2026*
+
+## Abstract
+
+Given an explicit labeled Boolean sample on which a conjunction decision list with
+$k$ rules makes no errors, can one efficiently find a slightly longer list that
+makes only a fixed fraction of errors? For each fixed $0<\varepsilon<1/2$,
+we rule out deterministic quasipolynomial-time algorithms that guarantee error at
+most $\varepsilon$ and length at most
+$k\exp(c_\varepsilon(\ln(N+2))^{1/6})$, for some $c_\varepsilon>0$, unless
+$\mathsf{NP}\subseteq\mathsf{QP}$. The sample has $N$ equally weighted indexed examples and
+dimension $d\le\log_2 N$. The result covers conjunctions of arbitrary width and
+arbitrary first-match order. The reduction uses adjacent slices of a sum of
+bounded integers. A coupling changes one coordinate group. On that group a local
+sunflower argument retains the first matching rules while leaving the opposite
+endpoint's address bits unexposed. We also obtain the randomized bound under
+$\mathsf{NP}\nsubseteq\mathsf{RQP}$, where $\mathsf{RQP}$ denotes one-sided randomized quasipolynomial time.
+
+## 1. Introduction
+
+A conjunction decision list [[1]](#ref-rivest) is an ordered sequence of rules. Each rule tests a
+conjunction of signed Boolean literals and predicts a bit. The first matching
+rule determines the prediction, with one default bit used when no rule matches.
+Rule order can make a conjunction useful even if it matches examples of both
+labels. This makes approximation by a short decision list different from covering
+a sample with rules that are individually correct on every match.
+
+Our input is an explicit indexed sample $S=((x_j,y_j))_{j=1}^N$, with
+$x_j\in\{0,1\}^d$ and $y_j\in\{0,1\}$. The sample is *consistent* if equal
+feature vectors have equal labels. Repeated vectors are allowed and each index
+contributes equally to empirical error
+
+$$
+\operatorname{err}_S(L)=\frac{1}{N}\sum_{j=1}^{N}\mathbf 1\{L(x_j)\ne y_j\}.
+$$
+
+The length $|L|$ counts paid rules. The final default is free.
+Let $\operatorname{OPT}_k(S)=\min_{|L|\le k}\operatorname{err}_S(L)$. The algorithm receives $S$ and $k$.
+It may test any conjunction of the input literals. We use $\mathsf{QP}$ for
+deterministic time $2^{(\log(v+2))^{O(1)}}$ on inputs of length $v$. The class
+$\mathsf{RQP}$ has the same worst-case time bound with one-sided error. Its algorithms
+always reject NO inputs and accept YES inputs with probability at least $2/3$.
+We write $[a]=\{1,\ldots,a\}$ for a positive integer $a$.
+
+<a id="thm-main"></a>
+
+**Theorem 1.**
+
+For every fixed $0<\varepsilon<1/2$ there is a constant $c_\varepsilon>0$
+with the following property. Suppose an algorithm, on every consistent indexed
+sample with $d\le\log_2N$ and $\operatorname{OPT}_k(S)=0$, returns a conjunction decision list
+$L$ satisfying
+
+$$
+\operatorname{err}_S(L)\le\varepsilon,\qquad
+|L|\le k\exp\!\left(c_\varepsilon(\ln(N+2))^{1/6}\right).
+$$
+
+A deterministic quasipolynomial-time algorithm with this guarantee implies
+$\mathsf{NP}\subseteq\mathsf{QP}$. A randomized quasipolynomial-time algorithm that meets both
+guarantees with probability at least $2/3$ on every promised input implies
+$\mathsf{NP}\subseteq\mathsf{RQP}$.
+
+For every fixed $A,C>0$ the permitted length exceeds $Ak(\log(N+2))^C$
+for sufficiently large $N$. At error $1/2$, an empirical majority default
+suffices. At $d\le\log_2N$, all $3^d$ conjunctions can be enumerated in
+polynomial time. The theorem concerns the selection and ordering of rules
+into a short list. It covers arbitrary indexed supports, where
+multiplicity matters. The reduction uses this freedom to realize its
+distribution by explicit enumeration.
+
+### 1.1 Related work
+
+**Minimum consistent decision lists.**
+
+Hancock, Jiang, Li, and Tromp [[2, Section 4]](#ref-hjlt) prove that approximating
+the minimum length of a perfectly consistent conjunction decision list is
+NP-hard within a factor $d^\gamma$ for some $\gamma>0$. Their reduction has
+one coordinate per vertex. For each vertex there is a positive example with
+just that coordinate zero. For each edge there is a negative example with
+just its endpoints' coordinates zero. The length
+gap relies on exact agreement. In fact, assign each vertex an independent
+uniform color in $[a]$ and give each color class the conjunction of all
+positive literals outside it. The resulting DNF accepts every vertex example.
+It accepts a negative edge example exactly when both endpoints receive the
+same color. Even with arbitrary row weights there is an $a$-term DNF with
+error at most $1/a$. Nock and Jappy [[3]](#ref-nj) study exact consistency under
+several size measures, and Ordyniak et al. [[4]](#ref-oprs) give parameterized
+algorithms and hardness results for exact fitting, including decision lists.
+
+**Realizable, fixed-error learning.**
+
+Khot and Saket [[5]](#ref-ks) show hardness of weakly learning a two-term DNF
+using any fixed number of DNF terms. Ghoshal and Saket [[6, Theorem 1.1]](#ref-gs)
+extend the soundness to arbitrary Boolean combinations of any fixed number of
+halfspaces. Since each conjunction is a halfspace, their theorem also covers
+conjunction decision lists of any fixed length. Their exact YES witness has
+two terms. When $d=O(\log N)$, the
+at most $3^{2d}$ pairs of conjunctions can be checked in polynomial time.
+Our witness length grows with the instance and the NO length bound grows
+faster than every fixed power of $\log N$.
+
+**Decision trees and bicriteria algorithms.**
+
+Koch, Strassle, and Tan [[7]](#ref-kst23), [[8]](#ref-kst24) prove fixed-error and size-approximation
+hardness for proper decision-tree learning. A tree can be expressed as a list
+with one conjunction per leaf, so a lower bound on tree size alone leaves the
+list side of the gap to be proved. Frost et al. [[9, Theorem 3]](#ref-flmm)
+give length, coverage, and accuracy guarantees for lists that may abstain
+and hand off to an external classifier. Their running time depends on an
+expanded family of tests that can contain a
+predicate of the form $r_j\wedge\bigwedge_{i<j}\neg r_i$. Such a predicate may
+require several conjunctions of input literals. Theorem [1](#thm-main) treats
+total prediction with a single bit default and measures the number of
+conjunctions used in the output.
+
+**Decision-list compression.**
+
+Lovett, Wu, and Zhang [[10]](#ref-lwz) give size bounds for approximating
+bounded-width decision lists under the uniform cube. In our proof we need
+a subsequence that preserves the *identity* of the first match after
+a local restriction. Its guarantee uses independence only among the variables
+of retained tests. This lets us select the tests before knowing the
+projection that identifies raw field indices. To our knowledge,
+Theorem [1](#thm-main) is the first hardness result for unrestricted
+conjunction decision lists to combine a zero-error witness, fixed additive
+error, and a superpolylogarithmic length gap at logarithmic dimension.
+
+### 1.2 Proof overview
+
+Each sample row contains multiple left–right pairs. Only one pair carries the
+label; the others are independently inactivated. The active pair has $t$ groups.
+In each group a projection-game edge specifies which two rank fields share a
+random jitter. The two modes set the difference of the sums of baseline ranks
+to zero or one. A satisfying labeling picks one field at each endpoint in each
+group, so the jitters cancel and a rank-ordered list classifies exactly.
+
+For soundness we compare the two modes by changing one baseline in a random
+group. Independent masks bound how many fields and opposite address bits a
+matching rule can test. We freeze the other groups and filter the two
+lists anchored at the active addresses to bounded subsequences. The filters
+leave the opposite address in the changed group symbolic, so the projection
+game still controls collisions among their selected field indices. We couple
+the ranks named by these subsequences and charge possible changes only to the
+tests of the actual first matching rules. A separate argument using the
+inactive product distribution controls rules without a unique active anchor.
+
+<a id="sec-source"></a>
+
+## 2. The projection game and addresses
+
+A projection game consists of a bipartite multigraph and one map from the
+left alphabet to the right alphabet per edge occurrence. Its value is the
+maximum fraction of occurrences on which the endpoint labels satisfy the
+projection. We use a source with constant alphabets, perfect completeness,
+arbitrarily small fixed NO value $\delta$, and the same positive fiber size
+$b$ for every right label on every edge. Here and below all edge sampling
+is uniform by occurrence.
+
+Such a source follows from the classical gap for
+Max-E3-SAT [[11, Theorem 6.5]](#ref-hastad) and Raz's parallel repetition theorem [[12]](#ref-raz).
+Use the gap for clauses on exactly three variables, with satisfiable YES
+formulas and NO value bounded away from one by an absolute constant.
+In the clause–variable game the left question is
+a clause and the right question is one of its three incident variables.
+On the left, use the seven satisfying assignments to the clause's three
+*literal truth values*, plus a second copy of each of the three
+assignments with exactly one true literal. This is a common alphabet of
+ten labels. For each position, precisely five of the labels give each
+truth value. The projection converts the assigned literal truth value
+to the underlying variable value, accounting for negation. This is an
+onto five-to-one map, as in Wenner's regularization [[13, proof of Theorem 1.17]](#ref-wenner). A global satisfying assignment wins every edge.
+For any labeling in NO, each clause violated by the right-hand assignment
+forces a disagreement on at least one of its three edges. Thus the
+game has value at most $1-\gamma_0$ for some absolute $\gamma_0>0$.
+Repeat $r$ independent edges in parallel, requiring all $r$ projections
+to pass. For a suitable constant $r$ the repeated game has value at
+most $\delta$ and fiber size $b=5^r$, with a polynomial number of
+occurrences in the SAT input length. Equivalently, the perfect-completeness
+four-to-one theorem of Fei, Minzer, and Wang [[14, Theorem 1.6]](#ref-fmw)
+supplies a source with $b=4$.
+
+### 2.1 Smoothness and semantic addresses
+
+Discard isolated vertices and take enough disjoint copies that the
+source has at least $v$ occurrences, where $v$ is the input length
+of the SAT instance. We construct a new game for one group.
+Draw $h$ independent source edges $(u_j,w_j)$, $1\le j\le h$, and an
+independent uniform position $i\in[h]$. Give the left player
+$(u_1,\ldots,u_h)$ and the right player $(i,w_i,(u_j)_{j\ne i})$.
+A left label assigns one original left label at each position. The right
+label uses an original right label at position $i$ and original left
+labels at all other positions, in their induced order. Apply the original
+projection at $i$ and copy all other answers. The new map is onto
+and still has fiber size $b$. A satisfying labeling extends. In NO,
+conditioning on $i$ and on the other left vertices yields a pair of
+original-game strategies for coordinate $i$. The new value is at
+most $\delta$. Also, for a fixed left vertex and two distinct left
+labels, a collision is possible only when they differ at exactly
+one position and that position is $i$. Its conditional probability
+is at most $\gamma=1/h$ because $i$ is independent of the left vertex.
+
+We can increase the right alphabet size $R$ arbitrarily by
+appending a common copy index to the two alphabets and preserving it
+under every map. This preserves the fiber size and completeness.
+Forgetting indices sends each successful edge of a labeling to a
+successful edge of a labeling of the preceding game, so NO value
+does not increase. Labels with different copy indices never collide.
+Let $q=bR$. Both alphabets are fixed independently of $v$. The group
+game is explicit, with $M=v^{O(1)}$ occurrences and $M\ge v$.
+
+Give each vertex of occurrence degree $d_u$ a set of $d_u$ copies.
+On the sampled occurrence, draw the two degree copies independently and
+uniformly conditional on their vertex. Also choose independent uniform
+permutations $P$ of $[q]$ and $T$ of $[R]$ at the left and right endpoints.
+Add independent uniform dummy indices with $R!$ choices on the left and
+$q!$ on the right. The raw projection on this occurrence is
+
+$$
+\rho=T^{-1}\pi P ,
+$$
+
+where $\pi$ is the group game's projection. The original vertex, degree
+copy, permutation, and dummy index together form a *semantic address*.
+Each side is uniform on its set of semantic addresses, since an endpoint's
+degree factor in its marginal cancels the uniform copy choice. There are
+$M q!R!$ such addresses on each side. Conditional on its original vertex,
+the randomness of an endpoint's own semantic address is independent
+of the underlying edge.
+
+<a id="sec-codes"></a>
+
+### 2.2 Balanced address encoding
+
+Set $t=\lceil\log_2(v+2)\rceil$ and $n=\lceil C_n t\rceil$,
+where $C_n$ will be a sufficiently large constant. Choose nested linear
+spaces $D\subset F\subset\mathbb{F}_2^n$ of dimensions $\lfloor n/4\rfloor$
+and $\lfloor n/2\rfloor$. For an absolute constant $\alpha>0$ we can
+require both $F$ and $D^\perp$ to have minimum distance greater than
+$2\alpha n$. To see this, choose the nested pair uniformly at random.
+The two spaces have uniform marginals at their dimensions. A fixed
+nonzero vector belongs to $F$ with probability $O(2^{-n/2})$ and
+to $D^\perp$ with probability $O(2^{-n/4})$. For small enough $\alpha$,
+the number of vectors of weight at most $2\alpha n$ is
+$2^{(h_2(2\alpha)+o(1))n}$, where $h_2$ denotes binary entropy and
+$h_2(2\alpha)<1/4$. A union bound proves existence for all sufficiently
+large $n$. Enumerating generators and checking distances takes
+$2^{O(n^2)}$ deterministic time.
+
+Encode each semantic address by a distinct coset of $D$ in $F$,
+separately for each side. There are enough cosets for a sufficiently
+large $C_n$ because $M$ is polynomial in $v$. Conditional on an edge
+and its two semantic addresses, independently sample a uniform word in
+each of the assigned cosets. Any set of at most $\alpha n$ coordinates
+of either sampled word is jointly uniform on its Boolean cube.
+Indeed, failure of surjectivity of the projection of $D$ onto those
+coordinates would give a nonzero annihilator in $D^\perp$ supported there.
+
+Publish each bit $x$ as the pair $(x,1-x)$. Concatenate the $t$ group
+words to make an endpoint's *full address*. A full address is valid
+if every group word belongs to the assigned coset of some semantic
+address of that group and side. On either side the full address is uniform
+on its set of $z$ valid addresses, with $\log_2 z=\Theta(tn)$.
+Each has exactly $tn$ zero bits. Two different valid full addresses
+are at relative Hamming distance at least $\alpha/t$.
+
+<a id="sec-construction"></a>
+
+## 3. The sample and its exact witness
+
+Let $\zeta>0$ be a small constant to be fixed from $\varepsilon$.
+Use
+
+<a id="eq-m"></a>
+
+$$
+m=\left\lceil C_m t^2(1+\log_2 z)\right\rceil
+\tag{1}
+$$
+
+pairs in a sample row, with $C_m$ a sufficiently large constant.
+Each pair contains two endpoints. An endpoint stores its full address,
+one activation bit, and raw rank fields for all $t$ groups.
+
+Fix a large power of two $H$, let $Q=H-5$, and put
+$B_H=\lceil(\log_2 H)^2\rceil$. A pair *active in mode $y$*, for
+$y\in\{0,1\}$, has the following law.
+
+1. Independently in each group draw a game occurrence and the two
+   addresses described in Section [2](#sec-source). Set both activation bits
+   to one.
+
+2. Draw $B_{Li},B_{Ri}\in\{0,\ldots,5\}$ for $i\in[t]$ uniformly
+   conditional on
+
+   <a id="eq-baseline"></a>
+
+   $$
+   \sum_{i=1}^t(B_{Li}-B_{Ri})=y.
+   \tag{2}
+   $$
+
+   These are the baselines. Independently of them, in each group $i$
+   associate to each raw right index $a$ a jitter $J_{ia}$, independently
+   over all groups and right indices. Its probability at $j\in\{0,\ldots,Q-1\}$
+   is proportional to
+
+   $$
+   (1+1/B_H)^{\min\{j,Q-1-j,\lfloor Q/10\rfloor\}}.
+   $$
+
+   The two endpoint atoms have the same mass $p$, which satisfies
+
+   <a id="eq-taper"></a>
+
+   $$
+   p\le \exp\big(-\Omega(H/(\ln H)^2)\big).
+   \tag{3}
+   $$
+
+   This follows by comparing the endpoint weight to a plateau weight.
+   Every atom is positive, and consecutive atom ratios belong to
+   $[(1+1/B_H)^{-1},1+1/B_H]$.
+
+3. For the right field $a$ in group $i$, the rank is $B_{Ri}+J_{ia}$.
+   For the left field $f$ it is $B_{Li}+J_{i,\rho_i(f)}$. Thus all ranks are
+   in $\{0,\ldots,H-1\}$. For each raw field, independently sample
+   $U$ uniformly in $\{0,\ldots,H-1\}$ and publish the two $\log_2 H$-bit
+   words for $U$ and $V=(U+\mathrm{rank})\bmod H$. We call these two words
+   a packet. Conditional on the rank, each of its words is individually
+   uniform. The rank is decoded as $(V-U)\bmod H$.
+
+An *inactive pair* is generated from a pair active in a fair random
+mode. At each endpoint independently, with probability $1/2$ clear the
+activation bit, and otherwise select a uniform zero address bit and
+raise it to one. The raise increases the weight of the address and
+therefore makes it invalid. The rank packets stay fixed. A sample row
+serves one uniform pair index, generates that pair active in a fair
+mode $y$, and independently makes all other pairs inactive. Its label
+is $y$. We first analyze this ideal law.
+
+<a id="lem-yes"></a>
+
+**Lemma 2.**
+
+The labeled law is consistent. In YES it admits a zero-error list with
+
+$$
+k=2mzH^{2t}
+$$
+
+paid rules and one default.
+
+**Proof.**
+
+The served pair is identified by two valid full addresses and
+activation bits equal to one. Decode its packets. The difference
+between the mean left rank and mean right rank in group $i$ is
+$B_{Li}-B_{Ri}$ because every jitter appears exactly $b$ times
+on the left and once on the right. Summing gives $y$ by
+[(2)](#eq-baseline). Thus the label is a function of the feature vector.
+
+In YES, choose a satisfying labeling of the group game. On a given
+address the selected raw index in each group is the inverse-permuted
+label of its semantic vertex. At each pair, side, and valid full
+address, place one rule for each of the $H^{2t}$ assignments to the
+selected $t$ packets. The rule tests those packets, the exact full
+address, and activation one. Both endpoints of the served pair
+supply exactly one match, and the inactive endpoints supply none.
+Sort the entire list by increasing sum of the decoded ranks of a
+rule, breaking ties in favor of the left side. Left rules output zero
+and right rules output one. The projections make the selected
+jitter sums agree. The sums of selected ranks therefore tie in
+mode zero and the right sum is smaller by one in mode one. $\square$
+
+<a id="sec-tools"></a>
+
+## 4. Local tools for the soundness proof
+
+<a id="lem-adjacent"></a>
+
+**Lemma 3 (Coupling adjacent baseline slices).**
+
+There is a joint draw of two baseline vectors whose marginals are
+within $o(1)$ in total variation of the two uniform slices in
+[(2)](#eq-baseline). The vectors differ by a unit change of one
+baseline. Conditional on either vector, any specified group is
+changed with probability at most $2/t$. The draw is independent
+of the group games and addresses.
+
+**Proof.**
+
+Use $5-B_{Ri}$ in place of each right baseline. The slices are now
+the vectors of $\{0,\ldots,5\}^{2t}$ with sums $5t$ and $5t+1$.
+Pick uniformly an edge of the cube of integer vectors that increments
+one coordinate from the first slice to the second. Each endpoint
+has at least $t$ eligible coordinates and at most $2t$, so the
+conditional choice is uniform over at least $t$ coordinates.
+
+The induced endpoint law weights a vector in its slice by its number
+of eligible coordinates. Under independent uniform coordinates this
+number is binomial of mean $5t/3$. A Chernoff bound gives deviation
+at most $t^{3/4}$ outside probability $\exp(-\Omega(\sqrt t))$.
+The central slice has cube mass $\Omega(t^{-1/2})$. The sum has
+variance $O(t)$ and a symmetric unimodal mass function, so its central
+mass is at least the average mass in an $O(\sqrt t)$ central window
+of constant probability. Symmetry and unimodality follow inductively
+because convolution with an interval uniform averages over a sliding
+window in a symmetric unimodal sequence. Counting the increment edges
+using the two degree bounds gives the upper slice at least half the
+mass of the lower slice. The degrees therefore also concentrate after
+conditioning on either slice. Normalizing the degree weights changes
+each slice law by $o(1)$ in total variation, as claimed. $\square$
+
+<a id="lem-filter"></a>
+
+**Lemma 4 (Retaining first matches).**
+
+Consider an ordered list of tests, each a conjunction of nonempty
+allowed-set tests on at most $s$ variables. Each variable has at most
+$K_0$ possible allowed sets. Give the variables finite reference
+marginals whose minimum positive atom is at least $\mu>0$, and assume
+the allowed sets intersect their respective reference supports.
+For each $\xi>0$ there is a subsequence of size at most
+$P_*(s,K_0,\mu,\xi)$ such that the probability that the first matching
+index is discarded is at most $\xi$ whenever the variables read by
+the subsequence have the product of their reference marginals.
+
+**Proof.**
+
+Delete later copies of identical tests. A sunflower of supports is a
+collection with all pairwise intersections equal to the same set, its
+*core*. When the allowed sets also agree on the core, call it a
+labeled core. Scan the list in order. Discard a test if it contains
+the labeled core of $r_*$ earlier retained tests that form a
+sunflower. Otherwise keep it. The integer $r_*$ will be chosen below.
+
+For sets of size $a$, a family with more than $a!(r-1)^a$ distinct
+sets contains a sunflower of size $r$. To prove this by induction,
+take a maximal disjoint subfamily. If its size is less than $r$, its
+union of at most $a(r-1)$ elements meets every set. Some element occurs
+in more than $(a-1)!(r-1)^{a-1}$ sets. Remove that element, apply
+induction on $a$, then add it to the resulting core. The claim at
+$a=0$ is vacuous, since at most one such set exists. Apply this count
+to each support size with $r=r_*K_0^s+1$ and choose one retained
+test per support. Among a sunflower of $r$ supports, more than
+$r_*$ tests agree on the labels of the core. The last of those
+would have been discarded. With at most $K_0^s$ distinct tests
+per support, the total retained count is $O_{s,K_0}(r_*^s)$.
+
+If a discarded index is the first match, one of its witnessing
+labeled cores passes and no earlier petal for that core passes.
+Use the first completed retained sunflower for each core. It
+was completed before every discard it certifies. Conditional on
+the core passing, each of its petals passes independently with
+probability at least $\mu^s$, including an empty petal which
+always passes. Thus the probability of the core passing with
+all its petals failing is at most $(1-\mu^s)^{r_*}$.
+The number of labeled cores is at most $2^s$ times the retained
+count because each core is a subtest of a retained test.
+The union bound is at most $\xi$ for sufficiently large $r_*$.
+It used only the variables of the retained tests. A discarded
+duplicate can never be the first match. $\square$
+
+<a id="lem-crossed"></a>
+
+**Lemma 5 (Crossed permutation queries).**
+
+Let $\pi:[q]\to[R]$ be $b$-to-one, $q=bR$, and let $P,T$
+be independent uniform permutations of $[q]$ and $[R]$,
+respectively. If $j\in[R]$ is chosen using $P$ and its side's
+private randomness, and $i\in[q]$ is chosen using $T$ and
+independent private randomness, then
+
+$$
+\Pr\{\pi(P(i))=T(j)\}
+= O\!\left(\sqrt{\frac{b+\log(qR+2)}{R}}\right)
+$$
+
+for all sufficiently large $R$ with $b$ fixed.
+
+**Proof.**
+
+Write $p_i$ for the probability of choosing $i$ and fix a threshold
+$u>0$. There are at most $1/u$ indices with $p_i\ge u$. Each contributes
+at most $1/R$ by fixing the left randomness, dropping the event
+that the right side chooses that index, and using uniformity of $T(j)$.
+For the other indices, condition on $j$. The right randomness is
+still independent of $P$. For each $i,j$ let $a_{ij}$ maximize
+$\Pr\{\pi(P(i))=a\mid j\}$ over $a$ (choose an arbitrary value if
+$j$ has probability zero). The contribution from the light indices
+is at most
+
+$$
+\mathbb{E}_j\sum_{i:p_i<u}p_i\Pr\{\pi(P(i))=a_{ij}\mid j\}
+\;\le\;u\,\mathbb{E}_P\max_j Z_j(P),
+\quad Z_j(P)=|\{i:\pi(P(i))=a_{ij}\}|.
+$$
+
+Here fixing $j$ and the right randomness determines the right-hand
+value $T(j)$, which justifies maximizing over $a$.
+
+Let $\ell=\lceil10\log_2(qR+2)\rceil$. For large $R$ we have
+$\ell\le R/2$, so any prescription of projected values on $\ell$
+distinct slots has probability at most $b^\ell/(q)_\ell\le(2/R)^\ell$,
+where $(q)_\ell$ is a falling factorial. Counting $\ell$-subsets of
+matches and taking a union bound over $j$ yields
+
+$$
+\Pr\{\max_j Z_j(P)\ge a\}
+\le R\frac{\binom{q}{\ell}(2/R)^\ell}{\binom{a}{\ell}} .
+$$
+
+For $a=\lceil\ell+16eb\rceil\le q$ this is at most $R4^{-\ell}$, using
+$\binom{q}{\ell}\le(eq/\ell)^\ell$ and
+$\binom{a}{\ell}\ge((a-\ell+1)/\ell)^\ell$.
+Since $\max_j Z_j\le q$, this gives $\mathbb{E}\max_j Z_j=O(b+\ell)$,
+also when $a>q$. The claimed bound follows by taking
+$u=1/\sqrt{R(b+\ell)}$. $\square$
+
+<a id="sec-soundness"></a>
+
+## 5. Soundness for arbitrary decision lists
+
+Fix a NO instance and a list with $J\le k2^t$ paid rules. A rule may
+read literals from any subset of the row. A row's *owner* is the
+index of its first matching rule. The final default is
+treated as an always-matching rule of index $J+1$.
+
+For a given pair, call a head *charged* if at either endpoint its
+address literals allow exactly one valid full address and it tests
+activation one there. Assign it one such endpoint and address as its
+*anchor*, breaking ties by a fixed rule. This assignment depends
+on the syntax of the rule and the set of valid addresses. The same head
+may be charged separately for several pairs. An *anchor list*
+contains all heads assigned to one anchor, in their original order.
+The *charged owner* is the first matching head charged for the
+served pair, or a sentinel last in order if none matches.
+
+<a id="sec-width"></a>
+
+### 5.1 Width and endpoint ranks of a matching rule
+
+The two actual addresses in the served pair are individually uniform on
+their valid sets. Since each head contributes to at most one anchor list
+for that pair, the expected total size of its two actual anchor lists
+is at most $J/z$. For
+$D_0=\lceil(J/z+1)e^t\rceil$, the probability that either list exceeds
+$D_0$ is $O(e^{-t})$ by Markov's inequality. Call an anchor list of size
+at most $D_0$ light. By [(1)](#eq-m), $\log m=o(t)$. Thus
+
+<a id="eq-light-count"></a>
+
+$$
+\log_2(D_0+1)\le 2t\log_2H+O(t).
+\tag{4}
+$$
+
+For an anchored head, count one variable for each raw packet it tests
+in the served pair, and one for each underlying opposite address bit it
+tests. Complementary published bits of one underlying bit contribute
+one variable. Tests on the own address, the activation bits, and other
+pairs do not enter this count. Contradictory address tests can be
+discarded. Set $D_*=\lceil10t(1+\log_2 H)\rceil$ and choose $C_n$ in
+Section [2.2](#sec-codes) so that $D_*<\alpha n$. If the count exceeds
+$D_*$, select one literal from each of $D_*$ distinct counted variables.
+Conditional on the group occurrences, semantic addresses, full own
+address, baselines, and jitters, the selected packet literals are
+independent fair tests by the independent masks. The selected opposite
+address bits are independent fair tests by the cosets and are
+independent of the masks. The head has probability at most $2^{-D_*}$
+of matching. We condition on lightness of the own anchor only when
+applying this bound. Union over its at most $D_0$ heads, then over the
+two sides. By [(4)](#eq-light-count), off $o(1)$ mass every matching
+charged head belongs to a light anchor and has count at most $D_*$.
+We may therefore filter to this total width by syntax.
+
+We also bound the number of groups where a width-filtered head reads
+a field with jitter $0$ or $Q-1$. For any fixed $\lambda>0$, the event
+that some such head at a light actual anchor reads an endpoint jitter
+in at least $\lceil\lambda t\rceil$ groups costs at most
+
+$$
+2D_0\,2^{D_*}(2p)^{\lceil\lambda t\rceil}=o(1)
+$$
+
+for sufficiently large fixed $H$. For each head choose one such field
+in each specified group, using at most $2^{D_*}$ subsets of fields.
+The respective jitters are independent across distinct groups
+conditional on the occurrences and addresses, with total endpoint
+mass $2p$ in each group. The bound follows from [(3)](#eq-taper)
+and [(4)](#eq-light-count).
+
+Use the coupling of Lemma [3](#lem-adjacent) and let $g$ be its changed
+group. We will draw the remaining data with its prescribed conditional
+law in each mode, even conditional on the baseline pair and $g$.
+It follows that the conditional probability bound $2/t$ for $g$ remains
+valid given either entire latent marginal row. Put
+
+$$
+s=\left\lceil\frac{24(1+\log_2 H)}{\zeta}\right\rceil,
+\qquad \lambda=\zeta/4 .
+$$
+
+A width-$D_*$ head can exceed local width $s$ in at most $D_*/s$
+groups. Off the endpoint-jitter exception above, it tests endpoint
+jitters in fewer than $\lceil\lambda t\rceil$ groups. By the $2/t$
+bound, the charged owner in either row, if it is paid, has the
+following properties except on at most $2\zeta+o(1)$ mass: it is
+at a light anchor, satisfies the total width bound, uses at most $s$
+counted variables in group $g$, and reads no endpoint jitter there.
+The same width and endpoint estimates apply to the biased marginal
+baselines, at an extra $o(1)$ cost.
+
+<a id="sec-selection"></a>
+
+### 5.2 Filtering with the opposite address unexposed
+
+Share the served index, all inactive pairs, and the occurrences and
+addresses of the active pair across the two modes. Share packets in
+all groups except $g$, where the baseline can change. Fix the outside
+data, including the other groups' addresses and packets, and fix the
+baseline pair and $g$. The changed group's game and address randomness
+remain fresh. In each of the two anchor lists, drop a heavy own anchor,
+apply the total width bound and the local bound $s$, and evaluate all
+tests outside the group. The own full address and both activation bits
+are fixed for that list. Leave the opposite endpoint's changed
+address segment as variables. In particular the symbolic list for a
+given side can be formed from its own full address and the fixed
+outside data before observing the opposite segment or the local
+packets.
+
+For each of the 36 ordered choices of the two local baselines, apply
+Lemma [4](#lem-filter) with $\xi=\zeta/2$. The reference variables are
+independent raw packets with the relevant single-packet law and
+independent fair opposite address bits. The minimum positive atom is
+at least $\min(p/H,1/2)$ and the number of possible unary tests is
+bounded in terms of $H$. A unary test with zero reference mass can
+never pass under the actual one-variable marginal either, so such a
+head can be removed. Take the union of the 36 bounded subsequences
+for each side. Each union mentions at most $K=36sP_*$ raw slots and
+address bits. For the fixed outside data, the union of a given anchor
+depends on that anchor and the local baseline choices, with no
+dependence on the opposite local address. The bound $K$ is fixed
+before choosing the game parameters.
+
+We seek two properties of the selected slots. Within each anchor's
+union, distinct left slots should project to distinct classes. In the
+union of both sides' lists, each class should be tested on at most one
+side. Distinct right slots already index distinct classes. We bound
+the probability of violating these properties conditional on the
+outside data, which leave the changed group's source fresh. A slot
+ordinal in an anchor's union is a function of its own address.
+For comparisons between the two lists we may fill missing ordinals
+arbitrarily. The following estimates apply to each relevant pair.
+
+- **(i)** Two distinct left slots selected by the left anchor collide with
+  probability at most $\gamma$. Fix that anchor, so its two left labels
+  after permutation are fixed and the edge is still random conditional
+  on the underlying left vertex. For two distinct left slots selected
+  by the right anchor, condition on the edge and right anchor. The
+  fresh left permutation gives probability $(b-1)/(q-1)$.
+
+- **(ii)** A left slot chosen by the left anchor and a right slot chosen by
+  the right anchor collide with probability at most $\delta$. Undo
+  the permutations. The two choices give strategies for the group game
+  using their own vertices and independent private randomness. The NO
+  value also bounds such strategies by averaging over their private
+  randomness.
+
+- **(iii)** For opposite-side slots chosen by the same anchor, condition on
+  the edge and that anchor. The opposite permutation is uniform and
+  independent of the choices. The regular fibers give probability $1/R$.
+
+- **(iv)** For a left slot chosen by the right anchor and a right slot
+  chosen by the left anchor, condition on the underlying edge.
+  The two independent permutations and private randomness satisfy
+  Lemma [5](#lem-crossed).
+
+Choose $\delta,\gamma$ sufficiently small and then increase $R$
+with the copy index, keeping $b$ fixed. The $O(K^2)$ comparisons
+then fail with total probability at most $\zeta$.
+In (i) the requirement of two distinct existing slots is measurable
+at the selecting anchor. The bounds still apply when only some anchors
+contribute the two ordinals. Same-side overlap between different
+lists is allowed.
+
+To bound the filtering loss of *one* anchor, condition on the
+edge, both semantic addresses, the full own address, the baseline pair
+and the outside data. Injectivity of this anchor's retained slots
+across its different raw fields is determined by this information:
+it requires distinct classes among the left slots and between the
+left and right slots in that union. Under this injectivity, its
+retained packets have independent product marginals. The opposite
+address coordinates used in the retained tests are jointly fair
+since $K<\alpha n$ for sufficiently large $v$, and they are independent
+of the packets. Apply Lemma [4](#lem-filter) under this conditioning.
+The probability of a first match discarded by this anchor's filter,
+intersected with its own injectivity, is at most $\zeta/2$ for either
+mode. This calculation is made separately for each anchor.
+Conditioning on the other anchor's union could reveal the very
+opposite address bits being kept uniform.
+
+If the full charged owner is eligible for its local anchor list,
+it is that local list's first match. On the event of no collisions,
+the probability of losing such an owner in the union is at most
+$\zeta$ per mode by summing the two filter loss bounds. This holds
+even if the full list has many matching heads.
+
+<a id="sec-coupling"></a>
+
+### 5.3 Coupling the actual charged owners
+
+To sample the changed group, now fix both full addresses, the edge,
+the outside data and both baselines. The retained unions and the
+collision event are determined. If a collision occurs, use any
+coupling with the prescribed marginals. Otherwise each selected
+jitter class has a unique used side. For every such class independently
+maximally couple its two ranks on that side, and subtract the
+corresponding baselines to obtain the two jitters. For unselected
+classes share their jitters, and use a common independent uniform
+$U$ in both rows at every raw field, independently across raw
+fields. This gives the specified conditional product law for each
+marginal. In particular it verifies the latent row claim used in
+Section [5.1](#sec-width).
+
+On an unchanged side the rank coupling preserves the rank. On a
+side whose baseline changes, a rank with nonendpoint jitter lies
+in both rank supports. At that rank the ratio of the two masses
+is between $(1+1/B_H)^{-1}$ and $1+1/B_H$. In a maximal coupling
+the common mass at each rank is the smaller of its two masses.
+Thus, conditional on that rank in either row, the chance it
+changes is at most $1/B_H$. This remains true conditional on
+that row's full latent data and the shared frame, since the local
+couplings are independent across classes and were chosen before
+drawing jitters and masks. If the rank is preserved, both packet
+words are preserved.
+
+For a retained actual charged owner of local width at most $s$, with
+no endpoint jitter in this group, the probability that any of its
+tests changes is at most $s/B_H\le\zeta$ for large fixed $H$. This
+uses only the tested fields of the owner. If both paid charged
+owners still match in the opposite row, they agree by their common
+order. The same implication holds when a sentinel is present:
+a paid rule preserved on the other row rules out a sentinel there.
+
+Counting the collision event once and the local width and boundary,
+filtering, and rank changes for both owners gives a disagreement
+probability at most
+
+$$
+\zeta+2(2\zeta+\zeta+\zeta)+o(1)=9\zeta+o(1).
+$$
+
+Finally correct each biased baseline marginal to its exact uniform
+slice using a maximal coupling applied to its marginal baseline alone.
+When its baseline vector changes,
+resample its active packets with the correct law. A marginal's
+packet law conditional on its old baseline and the common
+occurrences and addresses was already the required law. This
+correction has total cost $o(1)$ and leaves the common served index,
+inactive context, occurrences and addresses fixed. It gives
+charged-owner disagreement at most $10\zeta+o(1)$ under the ideal
+law.
+
+The parameter choices are noncircular. Fix $\zeta$ and then $H$ so
+that the endpoint tail union and $s/B_H\le\zeta$ hold. This fixes
+$P_*$ and $K$, so choose $\delta,\gamma$ and the alphabet enlargement
+next. Choose $C_n$ large enough for the semantic addresses and
+$D_*<\alpha n$. Because $K$ is constant the other code constraint
+$K<\alpha n$ holds eventually. The constant $C_m$ affects
+[(4)](#eq-light-count) only through $\log m=o(t)$.
+
+<a id="sec-restoration"></a>
+
+## 6. Restoring the inactive pairs
+
+Use the preceding coupling conditional on the served index and all the
+other inactive pairs. Let $X^0,X^1$ be the two active rows with exact
+marginals. Inactivate the served pair in each row with fresh randomness,
+giving $V^0,V^1$. Write $O$ for the first matching index of the full
+list, including the default. We first show
+
+<a id="eq-restored-agree"></a>
+
+$$
+\Pr\{O(V^0)\ne O(V^1)\}
+\le \frac{8\ln(J+1)}{m},
+\tag{5}
+$$
+
+<a id="eq-restored-survive"></a>
+
+$$
+\Pr\{O(V^y)\text{ fails to match }X^y\}
+\le \frac{2\log_2(J+1)}{m}\quad (y=0,1).
+\tag{6}
+$$
+
+**Disagreement of restored owners.**
+
+Draw a row from the product of the inactive pair laws and independently
+resample one uniform pair. Let $p_j$ be the original owner probability
+of rule $j$, and let $a_{ji}$ be the probability its tests in pair $i$
+pass. Its owner cell is contained in its match set, so
+$p_j\le\prod_i a_{ji}$ and $\sum_i(1-a_{ji})\le-\ln p_j$ whenever
+$p_j>0$. Resampling loses the first row's winning match with
+probability at most
+
+$$
+\frac{1}{m}\sum_j p_j(-\ln p_j)\le\frac{\ln(J+1)}{m}.
+$$
+
+If the owners differ, the earlier owner fails on the other row.
+By symmetry of resampling, disagreement has probability at most
+$2\ln(J+1)/m$.
+
+Conditional on the chosen index and the rest of the row, let $p_*$ be
+the probability of the modal owner under the fair inactive mixture
+in that pair. The two independent draws in the resampling experiment
+disagree with probability at least $1-p_*$ because their agreement
+probability is the sum of squared owner probabilities. The replaced
+block of each $V^y$, conditional on the served index and inactive
+pairs, has density at most two relative to the same fair inactive
+mixture. This follows because it is obtained from just one of the
+two fair-mixture modes. In establishing this density bound we
+average over the shared served occurrence and addresses.
+Therefore each $O(V^y)$ differs from the modal owner with conditional
+probability at most $2(1-p_*)$. Averaging and summing over the two
+modes proves [(5)](#eq-restored-agree).
+
+**Survival of a restored owner on reactivation.**
+
+Generate independent fair-mode active frames in all $m$ pairs and
+then independently inactivate all of them. Condition on the active
+frames. If a conjunctive rule fails on an active pair, a failed
+literal at some endpoint can be repaired by at most one of that
+endpoint's one-bit changes. Such a change has probability at most
+$1/2$. Let $f_j$ be the number of pairs where rule $j$ fails before
+inactivation. By block independence its conditional probability
+$p_j$ of becoming the first match is at most $2^{-f_j}$. The
+expected number of failed pairs for the restored owner, conditional
+on the frames, therefore satisfies
+
+$$
+\sum_j p_j f_j\le \sum_j p_j(-\log_2 p_j)\le\log_2(J+1),
+$$
+
+with zero terms omitted. A uniform pair belongs to those failed
+pairs with probability at most $\log_2(J+1)/m$. Conditioning
+the chosen pair's latent mode to be $y$ multiplies that bound
+by at most two. This is exactly the one-mode marginal of $V^y$
+with the chosen pair replaced by its active frame in $X^y$,
+proving [(6)](#eq-restored-survive).
+
+**From charged owners to prediction error.**
+
+Suppose the active owners differ and the earlier one is uncharged.
+Conditional on the two active rows, this earlier rule survives
+inactivation of its served pair with probability at least
+$\alpha^2/(4t^2)$. In fact, at an endpoint where the address tests
+allow several valid addresses, let $w'$ be a second valid address
+satisfying the tests. By equal weight and relative distance, at
+least an $\alpha/t$ fraction of the actual address's zero bits
+are ones in $w'$. Each such bit is untested, so raising it
+preserves the match. At an endpoint where the tests allow only
+one valid address, an uncharged matching rule has no activation-one
+test, so clearing the activation bit preserves its match. The
+two choices are independent, giving the stated probability.
+
+On a surviving restoration, the restored owner on that side comes
+before the other active owner. Thus the two restored owners cannot
+both agree and match their respective active rows. Equations
+[(5)](#eq-restored-agree) and [(6)](#eq-restored-survive) show that
+the probability of distinct active owners with an uncharged earlier
+one is at most
+
+$$
+\frac{4t^2}{\alpha^2}
+\left(\frac{8\ln(J+1)}{m}+\frac{4\log_2(J+1)}{m}\right).
+$$
+
+If instead the earlier of two distinct active owners is charged, it
+is the charged owner of its own row and fails on the other row.
+Hence the charged owners differ. Section [5.3](#sec-coupling) bounds
+that event by $10\zeta+o(1)$.
+
+Both active predictions being correct implies different owners.
+By a union bound the probability both predictions are correct is
+at least $1-2\operatorname{err}(L)$, where the error is under the ideal law.
+Combining the bounds gives
+
+<a id="eq-no-error"></a>
+
+$$
+\operatorname{err}(L)\ge \frac12-5\zeta-o(1)
+-O_\alpha\!\left(\frac{t^2\log(J+1)}{m}\right).
+\tag{7}
+$$
+
+Because $J\le 2mzH^{2t}2^t$ and $\log z=\Theta(t^2)$,
+we have $\log(J+1)=O(\log z)$. Choose the constant $C_m$
+in [(1)](#eq-m) large enough that the last term in
+[(7)](#eq-no-error) is at most $\zeta$ for all sufficiently
+large $v$. Thus every list of length at most $k2^t$ in NO
+has ideal error at least $1/2-6\zeta-o(1)$.
+
+<a id="sec-size"></a>
+
+## 7. The explicit indexed sample and the complexity gap
+
+The ideal law is a finite product of conditional draws. We first
+make the degree-copy choices have a uniform integer index of a
+size independent of the drawn edge. For an occurrence count $M$
+and requested degree $d_u$, use an independent uniform integer
+in $\{0,\ldots,M^3-1\}$ reduced modulo $d_u$. Every copy occurs,
+and its probability differs from uniform by at most $1/M^3$.
+Since $d_u\le M$, the variation cost per draw is $O(M^{-2})$.
+The total cost over all pairs and groups is $O(mt/M^2)=o(1)$
+because $m,t$ are polylogarithmic in $v$ and $M\ge v$.
+
+All other choices admit uniform indices directly. The positive
+rational jitter weights can be scaled to fixed integers.
+For the baseline slices, use the product of their cardinalities
+as a common denominator, which takes $O(t)$ bits since each
+slice has at most $6^{2t}$ vectors. The fair mode and the
+inactivation step also have fixed denominator sizes for a given
+instance, with exactly $tn$ possible zero bits at each endpoint.
+Unused star choices at the served pair can still be enumerated.
+The edge occurrences, permutations, dummy indices, address cosets,
+and packet masks are explicit finite sets. Enumerate all indices
+of the resulting uniform product. Repeat a row whenever it has
+several indices. This preserves the ideal support, so consistency
+and the YES witness are exact by Lemma [2](#lem-yes). Its variation
+distance from the ideal law is $o(1)$, so in NO it gives the same
+error gap up to $o(1)$.
+
+An enumeration index for one pair takes $O_\varepsilon(t^2)$ bits.
+Each of its $t$ groups uses $O_\varepsilon(\log(v+2)+n)$ bits for
+the occurrence, address and copy choices and a constant number
+of bits for the rank law. The slice and star indices fit the same
+bound. From [(1)](#eq-m) and $\log z=\Theta(t^2)$, we have
+$m=O_\varepsilon(t^4)$. The dimension before padding is at most
+$O_\varepsilon(mt(n+1))=O_\varepsilon(t^6)$.
+By uniformly duplicating the indices if needed, ensure $N\ge2^d$.
+This keeps the same empirical law and gives
+
+<a id="eq-clock"></a>
+
+$$
+\ln(N+2)=O_\varepsilon(t^6),\qquad
+t=\lceil\log_2(v+2)\rceil .
+\tag{8}
+$$
+
+Constructing the nested codes by search, enumerating the indices,
+and padding the sample all take deterministic quasipolynomial time.
+
+**Proof of Theorem [1](#thm-main).**
+
+Fix $\zeta<(1/2-\varepsilon)/20$ and a rational
+$\tau\in(\varepsilon,1/2-6\zeta)$.
+For all sufficiently large $v$, the deterministic construction
+maps SAT to the following promise gap for a consistent indexed
+sample with $d\le\log_2N$.
+
+- **YES.** A list with $k$ paid rules has zero error.
+
+- **NO.** Every list with at most $k2^t$ paid rules
+  has error greater than $\tau$.
+
+Choose $c_\varepsilon>0$ sufficiently small that
+$c_\varepsilon(\ln(N+2))^{1/6}\le(\ln2)t/2$ by [(8)](#eq-clock).
+The learner's permitted length is then at most $k2^t$ for
+large inputs, even after any fixed additional prefactor.
+
+Run the supposed algorithm with its quasipolynomial clock enforced
+also outside the realizable promise. Accept only when the output
+has valid syntax, at most $k2^t$ paid rules, and empirical error at
+most $\tau$. These conditions are checked by evaluating the first
+match on every indexed example. On YES the guarantee supplies an
+accepted output. On NO the gap rejects every output. The finitely
+many smaller SAT inputs can be decided by exhaustive search.
+This gives deterministic quasipolynomial time in $v$ for a
+deterministic learner and the same worst-case running time with
+one-sided error for a randomized learner. In the latter case
+the guarantee supplies an accepted output with probability at
+least $2/3$ on YES, and every coin outcome is rejected on NO.
+Composing with polynomial-time reductions to SAT proves the
+claimed implications. $\square$
+
+<a id="cor-coins"></a>
+
+**Corollary 6.**
+
+A randomized quasipolynomial-time learner as in
+Theorem [1](#thm-main) that uses at most
+$(\log(N+2))^{O(1)}$ random bits in the worst case implies
+$\mathsf{NP}\subseteq\mathsf{QP}$.
+
+**Proof.**
+
+Enumerate all random tapes up to the stated bound and use the
+same verifier. A YES input has a passing tape, and every tape
+fails on NO. By [(8)](#eq-clock) the tape enumeration and
+verification take deterministic quasipolynomial time in $v$. $\square$
+
+## References
+
+<a id="ref-rivest"></a>
+
+**[1]** Ronald L. Rivest. Learning decision lists. *Machine Learning*, 2(3):229–246, 1987. [Author copy](https://people.csail.mit.edu/rivest/pubs/Riv87b.pdf).
+
+<a id="ref-hjlt"></a>
+
+**[2]** Thomas R. Hancock, Tao Jiang, Ming Li, and John Tromp. Lower bounds on learning decision lists and trees. *Information and Computation*, 126(2):114–122, 1996. [DOI](https://doi.org/10.1006/inco.1996.0040).
+
+<a id="ref-nj"></a>
+
+**[3]** Richard Nock and Pascal Jappy. Decision tree based induction of decision lists. *Intelligent Data Analysis*, 3(3):227–240, 1999. [DOI](https://doi.org/10.1016/S1088-467X(99)00020-7).
+
+<a id="ref-oprs"></a>
+
+**[4]** Sebastian Ordyniak, Giacomo Paesani, Mateusz Rychlicki, and Stefan Szeider. A general theoretical framework for learning smallest interpretable models. *Artificial Intelligence*, 350:104441, 2026. [DOI](https://doi.org/10.1016/j.artint.2025.104441).
+
+<a id="ref-ks"></a>
+
+**[5]** Subhash Khot and Rishi Saket. Hardness of minimizing and learning DNF expressions. In *FOCS*, pages 231–240, 2008. [DOI](https://doi.org/10.1109/FOCS.2008.37).
+
+<a id="ref-gs"></a>
+
+**[6]** Suprovat Ghoshal and Rishi Saket. Hardness of learning DNFs using halfspaces. In *STOC*, pages 467–480, 2021. [Full version](https://arxiv.org/abs/1911.06358).
+
+<a id="ref-kst23"></a>
+
+**[7]** Caleb Koch, Carmen Strassle, and Li-Yang Tan. Properly learning decision trees with queries is NP-hard. In *FOCS*, pages 2383–2407, 2023. [Full version](https://arxiv.org/abs/2307.04093).
+
+<a id="ref-kst24"></a>
+
+**[8]** Caleb Koch, Carmen Strassle, and Li-Yang Tan. Superconstant inapproximability of decision tree learning. In *COLT*, PMLR 247, pages 2979–3010, 2024. [Proceedings](https://proceedings.mlr.press/v247/koch24a.html).
+
+<a id="ref-flmm"></a>
+
+**[9]** Nave Frost, Zachary C. Lipton, Yishay Mansour, and Michal Moshkovitz. Partially interpretable models with guarantees on coverage and accuracy. In *ALT*, PMLR 237, pages 590–613, 2024. [Proceedings](https://proceedings.mlr.press/v237/frost24a.html).
+
+<a id="ref-lwz"></a>
+
+**[10]** Shachar Lovett, Kewen Wu, and Jiapeng Zhang. Decision list compression by mild random restrictions. In *STOC*, 2020. [DOI](https://doi.org/10.1145/3357713.3384241).
+
+<a id="ref-hastad"></a>
+
+**[11]** Johan Håstad. Some optimal inapproximability results. *Journal of the ACM*, 48(4):798–859, 2001. [Author copy](https://people.kth.se/~johanh/optimalinap.pdf).
+
+<a id="ref-raz"></a>
+
+**[12]** Ran Raz. A parallel repetition theorem. *SIAM Journal on Computing*, 27(3):763–803, 1998. [DOI](https://doi.org/10.1137/S0097539795280895).
+
+<a id="ref-wenner"></a>
+
+**[13]** Cenny Wenner. Circumventing $d$-to-1 for approximation resistance of satisfiable predicates strictly containing parity of width at least four. *Theory of Computing*, 9(23):703–757, 2013. [DOI](https://doi.org/10.4086/toc.2013.v009a023).
+
+<a id="ref-fmw"></a>
+
+**[14]** Yumou Fei, Dor Minzer, and Shuo Wang. On the hardness of 4-to-1 games with perfect completeness. ECCC TR26-179, revision 3, 2026. [Report](https://eccc.weizmann.ac.il/report/2026/179/).
